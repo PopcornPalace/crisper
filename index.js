@@ -30,6 +30,25 @@ var inlineScriptFinder = pred.AND(
   )
 );
 
+var syncExternalScriptFinder = pred.AND(
+  pred.hasTagName('script'),
+  pred.hasAttr('src'),
+  pred.OR(
+    pred.NOT(
+      pred.hasAttr('type')
+    ),
+    pred.hasAttrValue('type', 'text/ecmascript-6'),
+    pred.hasAttrValue('type', 'application/javascript'),
+    pred.hasAttrValue('type', 'text/javascript')
+  ),
+  pred.NOT(
+    pred.OR(
+      pred.hasAttr('defer'),
+      pred.hasAttr('async')
+    )
+  )
+)
+
 var noSemiColonInsertion = /\/\/|;\s*$|\*\/\s*$/;
 
 module.exports = function crisp(options) {
@@ -86,9 +105,16 @@ module.exports = function crisp(options) {
         dom5.setAttribute(newScript, 'src', jsFileName);
       }
       if (scriptInHead) {
+
         dom5.setAttribute(newScript, 'defer', '');
         head.childNodes.unshift(newScript);
         newScript.parentNode = head;
+        /* Move ALL SYNC scripts to the top */
+        dom5.queryAll(doc, syncExternalScriptFinder)
+          .forEach(s => {
+            dom5.setAttribute(s, 'defer', '');
+            dom5.insertBefore(newScript.parentNode, newScript, s)
+          })
       } else {
         dom5.append(body, newScript);
       }
