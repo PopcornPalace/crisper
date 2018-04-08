@@ -107,12 +107,14 @@ module.exports = function crisp(options) {
       if (scriptInHead) {
 
         dom5.setAttribute(newScript, 'defer', '');
+        dom5.setAttribute(newScript, 'crossorigin', 'anonymous');
         head.childNodes.unshift(newScript);
         newScript.parentNode = head;
         /* Move ALL SYNC scripts to the top */
         dom5.queryAll(doc, syncExternalScriptFinder)
           .forEach(s => {
             dom5.setAttribute(s, 'defer', '');
+            dom5.setAttribute(s, 'crossorigin', 'anonymous');
             dom5.insertBefore(newScript.parentNode, newScript, s)
           })
       } else {
